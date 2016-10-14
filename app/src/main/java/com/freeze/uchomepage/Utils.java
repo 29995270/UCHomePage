@@ -8,6 +8,9 @@ import android.util.TypedValue;
  */
 
 public class Utils {
+
+    public static int RELEASE_DURATION = 500;
+
     public static int dp2px(Context context, float dpVal) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpVal, context.getResources().getDisplayMetrics());
     }

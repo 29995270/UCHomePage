@@ -2,9 +2,15 @@ package com.freeze.uchomepage;
 
 import android.animation.ArgbEvaluator;
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.ColorUtils;
 import android.support.v4.view.ViewPager;
+import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +21,7 @@ import android.widget.LinearLayout;
  * Created by Administrator on 2016/10/2.
  */
 
-public class SearchBar extends ViewGroup implements ViewPager.OnPageChangeListener{
+public class SearchBar extends ArcBottomView implements ViewPager.OnPageChangeListener {
 
     private float zoomPercent = 1; // 1 min 0 max
     private View root;
@@ -26,6 +32,13 @@ public class SearchBar extends ViewGroup implements ViewPager.OnPageChangeListen
 
     private int maxHeight = Utils.dp2px(getContext(), 224);
     private int searchContainerPaddingH = Utils.dp2px(getContext(), 16);
+
+    private int refreshArrowWidth = Utils.dp2px(getContext(), 4);
+    private int refreshTextSize = Utils.sp2px(getContext(), 14);
+    private int refreshTextMarginTop = Utils.dp2px(getContext(), 8);
+    private String refreshText = "刷新并进入头条";
+    private float refreshTextLenPx;
+
     private int minHeight = searchHeight;
     private ViewGroup menuGroup;
     private FrameLayout searchContainer;
@@ -33,6 +46,9 @@ public class SearchBar extends ViewGroup implements ViewPager.OnPageChangeListen
     private int darkSearchBarColor;
     private int lightSearchBarColor;
     private ArgbEvaluator argbEvaluator;
+    private float dragDownPercent;
+    private Paint refreshPaint;
+    private TextPaint refreshTextPaint;
 
     public SearchBar(Context context) {
         super(context);
@@ -58,6 +74,18 @@ public class SearchBar extends ViewGroup implements ViewPager.OnPageChangeListen
         argbEvaluator = new ArgbEvaluator();
         setSearchBarColor(zoomPercent);
         setSearchContainerPaddingH(1f - zoomPercent);
+
+        setBgColor(darkSearchBarColor);
+
+        refreshPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        refreshPaint.setStrokeJoin(Paint.Join.ROUND);
+        refreshPaint.setStrokeCap(Paint.Cap.ROUND);
+        refreshPaint.setStrokeWidth(refreshArrowWidth);
+
+        refreshTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+        refreshTextPaint.setTextSize(refreshTextSize);
+        refreshTextPaint.setColor(refreshColor);
+        refreshTextLenPx = refreshTextPaint.measureText(refreshText);
     }
 
     private void setSearchContainerPaddingH(float v) {
@@ -73,13 +101,20 @@ public class SearchBar extends ViewGroup implements ViewPager.OnPageChangeListen
             menuGroup.setVisibility(INVISIBLE);
         } else {
             menuGroup.setVisibility(VISIBLE);
-            menuGroup.setAlpha((v - 0.5f)/0.5f);
+            menuGroup.setAlpha((v - 0.5f) / 0.5f);
         }
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), (int) (minHeight + (1 - zoomPercent)*(maxHeight - minHeight)));
+
+        if (dragDownYOffset == 0) {
+            setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec),
+                    (int) (minHeight + (1 - zoomPercent) * (maxHeight - minHeight)));
+        } else {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        }
+
         measureChildren(widthMeasureSpec, heightMeasureSpec);
     }
 
@@ -90,7 +125,69 @@ public class SearchBar extends ViewGroup implements ViewPager.OnPageChangeListen
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        root.layout(l, t - (int) (zoomPercent * weatherHeight), r, maxHeight - (int) (zoomPercent * weatherHeight));
+        if (dragDownYOffset == 0) {
+            root.layout(l, t - (int) (zoomPercent * weatherHeight), r, maxHeight - (int) (zoomPercent * weatherHeight));
+        } else {
+            super.onLayout(changed, l, t, r, b);
+        }
+    }
+
+    @Override
+    protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+        if (child == root) {
+            float scaleRate = 1 - Math.max(0f, dragDownPercent) * 0.1f;
+            canvas.scale(scaleRate, scaleRate, child.getLeft() + child.getMeasuredWidth() / 2, child.getTop() + child.getMeasuredHeight() / 2);
+        }
+
+        return super.drawChild(canvas, child, drawingTime);
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (dragDownYOffset == 0) {
+            canvas.drawColor(darkSearchBarColor);
+        } else {
+            super.onDraw(canvas);
+            drawRefreshBall(canvas);
+        }
+    }
+
+    private int refreshBallMaxRadios = Utils.dp2px(getContext(), 16);
+    private int refreshColor = Color.WHITE;
+
+    private void drawRefreshBall(Canvas canvas) {
+
+        canvas.save();
+        int centerX = getMeasuredWidth() / 2;
+        int centerY = maxHeight * 2 / 3;
+        float percent = Math.min(dragDownPercent/DragTracker.DRAG_SECTION_RATE, 1);
+        if (percent < 0) percent = 0;
+
+        if (dragDownPercent > DragTracker.DRAG_SECTION_RATE) {
+            canvas.translate(0, dragDownYOffset - dragDownYMaxOffset*DragTracker.DRAG_SECTION_RATE);
+        }
+
+        canvas.save();
+        canvas.rotate(180 * percent, getMeasuredWidth() / 2, maxHeight * 2 / 3);
+        canvas.scale(percent, percent, centerX, centerY);
+        //draw circle
+        int alpha = (int) (255 * percent);
+        refreshPaint.setColor(ColorUtils.setAlphaComponent(refreshColor, alpha));
+        refreshTextPaint.setColor(ColorUtils.setAlphaComponent(refreshColor, alpha));
+        refreshPaint.setStyle(Paint.Style.FILL);
+        canvas.drawCircle(getMeasuredWidth() / 2, maxHeight * 2 / 3, refreshBallMaxRadios, refreshPaint);
+
+        //draw arrow
+        refreshPaint.setColor(ColorUtils.setAlphaComponent(darkSearchBarColor, alpha));
+        refreshPaint.setStyle(Paint.Style.STROKE);
+        canvas.drawLine(centerX - refreshBallMaxRadios/2, centerY - refreshBallMaxRadios/4, centerX, centerY + refreshBallMaxRadios/4, refreshPaint);
+        canvas.drawLine(centerX + refreshBallMaxRadios/2, centerY - refreshBallMaxRadios/4, centerX, centerY + refreshBallMaxRadios/4, refreshPaint);
+        canvas.restore();
+
+        //draw text
+        canvas.drawText(refreshText, centerX - refreshTextLenPx/2, centerY + refreshBallMaxRadios + refreshTextMarginTop + refreshTextSize, refreshTextPaint);
+
+        canvas.restore();
     }
 
     @Override
@@ -120,5 +217,20 @@ public class SearchBar extends ViewGroup implements ViewPager.OnPageChangeListen
     @Override
     public void onPageScrollStateChanged(int state) {
 
+    }
+
+    @Override
+    public void onDrag(int dragDownX, int dragDownYOffset, float percent) {
+        super.onDrag(dragDownX, dragDownYOffset, percent);
+        this.dragDownPercent = percent;
+        if (root != null) {
+
+            root.setAlpha(1 - Math.min(dragDownPercent/DragTracker.DRAG_SECTION_RATE, 1));
+        }
+    }
+
+    @Override
+    public void onRelease(int dragDownX, int dragDownYOffset) {
+        super.onRelease(dragDownX, dragDownYOffset);
     }
 }

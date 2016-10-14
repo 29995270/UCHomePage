@@ -1,20 +1,24 @@
 package com.freeze.uchomepage;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
-import android.support.v4.content.ContextCompat;
+import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
-import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.OvershootInterpolator;
 
 /**
  * Created by Administrator on 2016/10/11.
  */
 
-public class ArcBottomView extends View implements DragTrackLinearLayout.DragActionReceiver{
+public class ArcBottomView extends ViewGroup implements DragTracker.DragActionReceiver{
 
     private int rectStartHeight;
     private int rectHeight;
@@ -23,12 +27,13 @@ public class ArcBottomView extends View implements DragTrackLinearLayout.DragAct
     private Paint solidPaint;
     private Path path;
 
-    private int dragDownYOffset;
+    protected int dragDownYOffset;
     private float arcYOffsetPercent = 0.33f;
-    private int dragDownYMaxOffset;
     private int dragDownX;
-    private int mWidth;
     private Point dragPoint;
+    private ValueAnimator releaseAnim;
+    private boolean releaseAnimating;
+    protected int dragDownYMaxOffset;
 
     public ArcBottomView(Context context) {
         super(context);
@@ -41,56 +46,90 @@ public class ArcBottomView extends View implements DragTrackLinearLayout.DragAct
     }
 
     @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        if (getChildAt(0) != null) {
+            getChildAt(0).layout(l, t + (rectHeight - rectStartHeight), r, t + rectHeight);
+        }
+    }
+
+    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(rectStartHeight + Math.min(dragDownYOffset, dragDownYMaxOffset), MeasureSpec.EXACTLY));
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(rectStartHeight + Math.max(0, dragDownYOffset), MeasureSpec.EXACTLY));
+    }
+
+    public void setBgColor(@ColorInt int color) {
+        solidPaint.setColor(color);
     }
 
     private void init(Context context, AttributeSet attrs) {
+        setWillNotDraw(false);
         rectStartHeight = Utils.dp2px(context, 224);
+        dragDownYMaxOffset = rectStartHeight/2;
         rectHeight = rectStartHeight;
         arcHeight = 0;
-        dragDownYMaxOffset = rectStartHeight / 2;
-        backgroundColor = ContextCompat.getColor(context, R.color.colorPrimaryDark);
+        backgroundColor = Color.TRANSPARENT;
         solidPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         solidPaint.setColor(backgroundColor);
         path = new Path();
 
         dragPoint = new Point(0, rectStartHeight);
 
-        new InterC
-
-        postDelayed(new Runnable() {
+        releaseAnim = ValueAnimator.ofInt().setDuration(Utils.RELEASE_DURATION);
+        releaseAnim.setInterpolator(new OvershootInterpolator());
+        releaseAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
-            public void run() {
-                onDrag(getWidth()/3, 50);
+            public void onAnimationUpdate(ValueAnimator animation) {
+                int value = (int) animation.getAnimatedValue();
+                onDrag(dragDownX, value, value/dragDownYMaxOffset);
             }
-        }, 3000);
+        });
+
+        releaseAnim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                releaseAnimating = false;
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                releaseAnimating = false;
+            }
+
+            @Override
+            public void onAnimationStart(Animator animation) {
+                releaseAnimating = true;
+            }
+        });
+
+        onDrag(0, 0, 0);
     }
 
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
-        this.mWidth = w;
-    }
-
-    public void onDrag(int dragDownX, int dragDownYOffset) {
+    public void onDrag(int dragDownX, int dragDownYOffset, float percent) {
+        if (dragDownYOffset < 0 && !releaseAnimating) {
+            return;
+        }
         this.dragDownX = dragDownX;
         this.dragDownYOffset = dragDownYOffset;
-        rectHeight = (int) (Math.min(dragDownYOffset, dragDownYMaxOffset) * (1 - arcYOffsetPercent) + rectStartHeight);
-        arcHeight = (int) (Math.min(dragDownYOffset, dragDownYMaxOffset) * arcYOffsetPercent);
+
+        rectHeight = Math.max(
+                ((int) (dragDownYOffset * (1 - arcYOffsetPercent)) + rectStartHeight),
+                rectStartHeight);
+        arcHeight = (int) (dragDownYOffset * arcYOffsetPercent);
         dragPoint.set(dragDownX, rectHeight + 2 * arcHeight);
         requestLayout();
+        invalidate(); //size 不变时 强制 invalidate
     }
 
     @Override
     public void onRelease(int dragDownX, int dragDownYOffset) {
-        ValueAnimator animator = ValueAnimator.ofInt(dragDownYOffset, 0).setDuration(300);
-        animator.setInterpolator(new );
+        releaseAnim.setIntValues(dragDownYOffset, 0);
+        releaseAnim.start();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        path.reset();
         path.lineTo(getMeasuredWidth(), 0);
         path.lineTo(getMeasuredWidth(), rectHeight);
         path.quadTo(dragPoint.x, dragPoint.y, 0, rectHeight);

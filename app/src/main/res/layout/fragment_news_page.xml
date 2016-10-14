@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.freeze.uchomepage.DragTrackLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<com.freeze.uchomepage.DragTracker xmlns:android="http://schemas.android.com/apk/res/android"
+                                   android:id="@+id/drag_tracker"
+                                   android:orientation="vertical" android:layout_width="match_parent"
+                                   android:layout_height="match_parent">
 
     <com.freeze.uchomepage.ArcBottomView
+        android:id="@+id/arc_view"
         android:layout_width="match_parent"
         android:layout_height="224dp" />
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#3f64"/>
-</com.freeze.uchomepage.DragTrackLinearLayout>
+        android:background="#7888"/>
+</com.freeze.uchomepage.DragTracker>
