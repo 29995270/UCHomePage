@@ -425,6 +425,7 @@ public class PullRefreshLayout extends ViewGroup {
         public void onAnimationEnd(Animation animation) {
             if (mListener != null) {
                 mListener.onOverScroll();
+                mRefreshing = true;
             }
         }
 
