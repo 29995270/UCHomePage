@@ -303,8 +303,10 @@ public class PullRefreshLayout extends ViewGroup {
                 final float y = MotionEventCompat.getY(ev, pointerIndex);
                 final float overscrollTop = (y - mInitialMotionY) * DRAG_RATE;
                 mIsBeingDragged = false;
-                if (overscrollTop > mTotalDragDistance) {
+                if (overscrollTop > mTotalDragDistance && overscrollTop < mTotalDragDistance * 1.8f) {
                     setRefreshing(true, true);
+                } else if (overscrollTop > mTotalDragDistance * 1.8f) {
+                    setOverScroll();
                 } else {
                     mRefreshing = false;
                     animateOffsetToStartPosition();
@@ -344,6 +346,16 @@ public class PullRefreshLayout extends ViewGroup {
         mRefreshView.startAnimation(mAnimateToCorrectPosition);
     }
 
+    private void animateOffsetToOverScrollPosition() {
+        mFrom = mCurrentOffsetTop;
+        mAnimateToOverScrollPosition.reset();
+        mAnimateToOverScrollPosition.setDuration(mDurationToCorrectPosition);
+        mAnimateToOverScrollPosition.setInterpolator(mDecelerateInterpolator);
+        mAnimateToOverScrollPosition.setAnimationListener(mOverScrollListener);
+        mRefreshView.clearAnimation();
+        mRefreshView.startAnimation(mAnimateToOverScrollPosition);
+    }
+
     private final Animation mAnimateToStartPosition = new Animation() {
         @Override
         public void applyTransformation(float interpolatedTime, Transformation t) {
@@ -355,6 +367,16 @@ public class PullRefreshLayout extends ViewGroup {
         @Override
         public void applyTransformation(float interpolatedTime, Transformation t) {
             int endTarget = mSpinnerFinalOffset;
+            int targetTop = (mFrom + (int) ((endTarget - mFrom) * interpolatedTime));
+            int offset = targetTop - mTarget.getTop();
+            setTargetOffsetTop(offset, false /* requires update */);
+        }
+    };
+
+    private final Animation mAnimateToOverScrollPosition = new Animation() {
+        @Override
+        public void applyTransformation(float interpolatedTime, Transformation t) {
+            int endTarget = mSpinnerFinalOffset + mTotalDragDistance;
             int targetTop = (mFrom + (int) ((endTarget - mFrom) * interpolatedTime));
             int offset = targetTop - mTarget.getTop();
             setTargetOffsetTop(offset, false /* requires update */);
@@ -374,6 +396,10 @@ public class PullRefreshLayout extends ViewGroup {
         }
     }
 
+    private void setOverScroll() {
+        animateOffsetToOverScrollPosition();
+    }
+
     private void setRefreshing(boolean refreshing, final boolean notify) {
         if (mRefreshing != refreshing) {
             mNotify = notify;
@@ -388,6 +414,25 @@ public class PullRefreshLayout extends ViewGroup {
             }
         }
     }
+
+    private Animation.AnimationListener mOverScrollListener = new Animation.AnimationListener() {
+        @Override
+        public void onAnimationStart(Animation animation) {
+            mRefreshView.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+            if (mListener != null) {
+                mListener.onOverScroll();
+            }
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+
+        }
+    };
 
     private Animation.AnimationListener mRefreshListener = new Animation.AnimationListener() {
         @Override
@@ -504,6 +549,8 @@ public class PullRefreshLayout extends ViewGroup {
     }
 
     public static interface OnRefreshListener {
-        public void onRefresh();
+        void onRefresh();
+
+        void onOverScroll();
     }
 }
