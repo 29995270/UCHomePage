@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <com.freeze.uchomepage.DragTracker
+        android:id="@+id/drag_tracker"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <com.freeze.uchomepage.DragUpReceiver
+            android:id="@+id/drag_up_receiver"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.freeze.uchomepage.SearchBar
+                android:id="@+id/arc_view"
+                android:layout_width="match_parent"
+                android:layout_height="224dp" />
+
+            <include
+                android:id="@+id/some_menu"
+                layout="@layout/some_menu" />
+        </com.freeze.uchomepage.DragUpReceiver>
+
+        <include
+            android:id="@+id/news_list"
+            layout="@layout/list_news" />
+    </com.freeze.uchomepage.DragTracker>
+
+    <LinearLayout
+        android:id="@+id/news_top_bar"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/colorPrimaryDark">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
+            android:gravity="center"
+            android:text="news"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:drawableLeft="@android:drawable/ic_dialog_email"
+            android:drawableStart="@android:drawable/ic_dialog_email"
+            android:drawablePadding="16dp" />
+    </LinearLayout>
+</FrameLayout>

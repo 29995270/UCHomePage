@@ -11,6 +11,7 @@ import android.graphics.Path;
 import android.graphics.Point;
 import android.support.annotation.ColorInt;
 import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.OvershootInterpolator;
 
@@ -57,6 +58,12 @@ public class ArcBottomView extends ViewGroup implements DragTracker.DragActionRe
         super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(rectStartHeight + Math.max(0, dragDownYOffset), MeasureSpec.EXACTLY));
     }
 
+    @Override
+    protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
+        if (willNotDraw()) return false;
+        return super.drawChild(canvas, child, drawingTime);
+    }
+
     public void setBgColor(@ColorInt int color) {
         solidPaint.setColor(color);
     }
@@ -80,7 +87,7 @@ public class ArcBottomView extends ViewGroup implements DragTracker.DragActionRe
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 int value = (int) animation.getAnimatedValue();
-                onDrag(dragDownX, value, value/dragDownYMaxOffset);
+                innerDragProcess(dragDownX, value, value/dragDownYMaxOffset);
             }
         });
 
@@ -104,8 +111,25 @@ public class ArcBottomView extends ViewGroup implements DragTracker.DragActionRe
         onDrag(0, 0, 0);
     }
 
-    public void onDrag(int dragDownX, int dragDownYOffset, float percent) {
-        if (dragDownYOffset < 0 && !releaseAnimating) {
+    public void onDrag(int dragDownX, int dragDownYOffset, float dragDownPercent) {
+        if (releaseAnimating) return;
+        if (dragDownYOffset < 0) {   //不响应向上的 drag 动作
+            return;
+        }
+        this.dragDownX = dragDownX;
+        this.dragDownYOffset = dragDownYOffset;
+
+        rectHeight = Math.max(
+                ((int) (dragDownYOffset * (1 - arcYOffsetPercent)) + rectStartHeight),
+                rectStartHeight);
+        arcHeight = (int) (dragDownYOffset * arcYOffsetPercent);
+        dragPoint.set(dragDownX, rectHeight + 2 * arcHeight);
+        requestLayout();
+        invalidate(); //size 不变时 强制 invalidate
+    }
+
+    private void innerDragProcess(int dragDownX, int dragDownYOffset, float dragDownPercent) {
+        if (dragDownYOffset < 0 && !releaseAnimating) {   //不响应向上的 drag 动作
             return;
         }
         this.dragDownX = dragDownX;
@@ -122,6 +146,7 @@ public class ArcBottomView extends ViewGroup implements DragTracker.DragActionRe
 
     @Override
     public void onRelease(int dragDownX, int dragDownYOffset) {
+        if (dragDownYOffset < 0 || dragDownYOffset >= dragDownYMaxOffset*DragTracker.DRAG_SECTION_RATE) return; //不响应向上的 drag 动作
         releaseAnim.setIntValues(dragDownYOffset, 0);
         releaseAnim.start();
     }

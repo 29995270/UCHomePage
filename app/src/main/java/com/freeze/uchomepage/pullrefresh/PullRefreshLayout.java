@@ -20,8 +20,6 @@ import android.widget.ImageView;
 
 import com.freeze.uchomepage.R;
 
-import java.security.InvalidParameterException;
-
 /**
  * Created by baoyz on 14/10/30.
  */
@@ -109,9 +107,6 @@ public class PullRefreshLayout extends ViewGroup {
 
     public void setRefreshStyle(int type) {
         setRefreshing(false);
-
-        mRefreshDrawable.setColorSchemeColors(mColorSchemeColors);
-        mRefreshView.setImageDrawable(mRefreshDrawable);
     }
 
     public void setRefreshDrawable(RefreshDrawable drawable) {

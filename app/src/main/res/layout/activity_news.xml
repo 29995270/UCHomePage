@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/news_top_bar"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:background="@color/colorPrimaryDark">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
+            android:gravity="center"
+            android:text="news"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:drawableLeft="@android:drawable/ic_dialog_email"
+            android:drawableStart="@android:drawable/ic_dialog_email"
+            android:drawablePadding="16dp" />
+    </LinearLayout>
+
+    <com.freeze.uchomepage.pullrefresh.PullRefreshLayout
+        android:id="@+id/refresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <include layout="@layout/list_news"/>
+        </ScrollView>
+
+    </com.freeze.uchomepage.pullrefresh.PullRefreshLayout>
+
+</LinearLayout>

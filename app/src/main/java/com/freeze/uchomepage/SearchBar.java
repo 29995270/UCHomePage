@@ -10,7 +10,6 @@ import android.support.v4.graphics.ColorUtils;
 import android.support.v4.view.ViewPager;
 import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -219,13 +218,16 @@ public class SearchBar extends ArcBottomView implements ViewPager.OnPageChangeLi
 
     }
 
-    @Override
-    public void onDrag(int dragDownX, int dragDownYOffset, float percent) {
-        super.onDrag(dragDownX, dragDownYOffset, percent);
-        this.dragDownPercent = percent;
-        if (root != null) {
+    public void expendOrCollapse(boolean expendOrCollapse) {
+        onPageScrolled(0, expendOrCollapse? (float) 0.01 : 1, 0);
+    }
 
-            root.setAlpha(1 - Math.min(dragDownPercent/DragTracker.DRAG_SECTION_RATE, 1));
+    @Override
+    public void onDrag(int dragDownX, int dragDownYOffset, float dragDownPercent) {
+        super.onDrag(dragDownX, dragDownYOffset, dragDownPercent);
+        this.dragDownPercent = dragDownPercent;
+        if (root != null) {
+            root.setAlpha(1 - Math.min(this.dragDownPercent /DragTracker.DRAG_SECTION_RATE, 1));
         }
     }
 
