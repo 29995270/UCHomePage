@@ -16,7 +16,8 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".NewsActivity"/>
+        <activity android:name=".NewsActivity"
+            android:launchMode="singleTop"/>
     </application>
 
 </manifest>
