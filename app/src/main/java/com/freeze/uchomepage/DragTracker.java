@@ -6,7 +6,6 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.support.v4.widget.ViewDragHelper;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -223,7 +222,6 @@ public class DragTracker extends LinearLayout{
     }
 
     private void onDrag(int dragDownX, int dragDownYOffset) {
-        Log.v("AAA", dragDownYOffset + "");
         dragYOffset = dragDownYOffset;
         for (DragActionReceiver receiver : dragActionReceivers) {
             receiver.onDrag(dragDownX,

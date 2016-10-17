@@ -17,6 +17,7 @@ public class MainActivity extends AppCompatActivity implements DragTracker.DragA
     private ViewPager viewPager;
     private int dragOffset;
     private float dragUpPercent;
+    private int viewPageState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,17 +39,18 @@ public class MainActivity extends AppCompatActivity implements DragTracker.DragA
 
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                searchBar.setVisibility(View.VISIBLE);
-                adapter.arcView.setWillNotDraw(true);
-            }
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
 
             @Override
-            public void onPageSelected(int position) {
-            }
+            public void onPageSelected(int position) {}
 
             @Override
             public void onPageScrollStateChanged(int state) {
+                MainActivity.this.viewPageState = state;
+                if (state != ViewPager.SCROLL_STATE_IDLE) {
+                    searchBar.setVisibility(View.VISIBLE);
+                    adapter.arcView.setWillNotDraw(true);
+                }
             }
         });
 
@@ -64,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements DragTracker.DragA
 
     @Override
     public void onDrag(int dragDownX, int dragDownYOffset, float dragDownPercent) {
+        if (viewPageState != ViewPager.SCROLL_STATE_IDLE) return;
         this.dragOffset = dragDownYOffset;
         if (dragDownYOffset < 0) {
             searchBar.setVisibility(View.INVISIBLE);
