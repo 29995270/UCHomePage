@@ -15,8 +15,6 @@ public class MainActivity extends AppCompatActivity implements DragTracker.DragA
     private HomePageAdapter adapter;
     private SearchBar searchBar;
     private ViewPager viewPager;
-    private int dragOffset;
-    private float dragUpPercent;
     private int viewPageState;
 
     @Override
@@ -49,7 +47,7 @@ public class MainActivity extends AppCompatActivity implements DragTracker.DragA
                 MainActivity.this.viewPageState = state;
                 if (state != ViewPager.SCROLL_STATE_IDLE) {
                     searchBar.setVisibility(View.VISIBLE);
-                    adapter.arcView.setWillNotDraw(true);
+                    adapter.arcView.setVisibility(View.INVISIBLE);
                 }
             }
         });
@@ -67,18 +65,17 @@ public class MainActivity extends AppCompatActivity implements DragTracker.DragA
     @Override
     public void onDrag(int dragDownX, int dragDownYOffset, float dragDownPercent) {
         if (viewPageState != ViewPager.SCROLL_STATE_IDLE) return;
-        this.dragOffset = dragDownYOffset;
         if (dragDownYOffset < 0) {
             searchBar.setVisibility(View.INVISIBLE);
-            adapter.arcView.setWillNotDraw(false);
+            adapter.arcView.setVisibility(View.VISIBLE);
 
             float dragUp = Math.abs(dragDownYOffset);
-            dragUpPercent = dragUp / DragUpReceiver.MAX_DRAG_UP_DIS;
+            float dragUpPercent = dragUp / DragUpReceiver.MAX_DRAG_UP_DIS;
             adapter.newsTopBar.setTranslationY(Math.min(0, -adapter.newsTopBarHeight * (1 - dragUpPercent)));
 
         } else {
             searchBar.setVisibility(View.VISIBLE);
-            adapter.arcView.setWillNotDraw(true);
+            adapter.arcView.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -127,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements DragTracker.DragA
                 View newsPage = inflater.inflate(R.layout.news_page, container, false);
                 container.addView(newsPage);
                 arcView = (SearchBar) newsPage.findViewById(R.id.arc_view);
-                arcView.setWillNotDraw(true);
+                arcView.setVisibility(View.INVISIBLE);
                 dragTracker = (DragTracker) newsPage.findViewById(R.id.drag_tracker);
                 dragUpReceiver = (DragUpReceiver) newsPage.findViewById(R.id.drag_up_receiver);
                 dragTracker.addDragActionReceiver(arcView);
