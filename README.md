@@ -5,7 +5,7 @@ UC浏览器主页大部分动画效果的演示项目
 
 ![](https://github.com/29995270/UCHomePage/blob/master/demo.gif "uc browser")
 
-![](https://github.com/29995270/UCHomePage/blob/master/struct.gif "uc browser")
+![](https://github.com/29995270/UCHomePage/blob/master/struct.png "uc browser")
 
 1. ViewPager
 2. ViewPager 的第一页，DragTracker，继承自 LinearLayout，用 ViewDragHelper 追踪在这一页的上下拉行为并分发给接收者
