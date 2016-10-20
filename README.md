@@ -16,4 +16,7 @@ UC浏览器主页大部分动画效果的演示项目
 7. SearchBar 布局和 4 一样，但是是处于展开状态，并接受 2 中 DragTracker 的下拉行为，通过改变自身高度 和 绘制背景（贝塞尔曲线的弧形底边效果），实现下拉动画效果
 8. 菜单布局
 
-ps.上下拉时会隐藏 4 的 SearchBar， 并展示 7 的 SearchBar
+ps.上下拉时会隐藏 4 的 SearchBar， 并展示 7 的 SearchBar  
+  
+# Thanks
+NewsActivity 中使用了 [baoyongzhang](https://github.com/baoyongzhang)  的 [PullRefreshLayout](https://github.com/baoyongzhang/android-PullRefreshLayout) 并做了简单修改，添加了OverScroll 的动作，并仿照 UC Browser 写了一个 RefreshHeader。
