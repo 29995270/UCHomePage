@@ -156,7 +156,7 @@ public class DoublePartRefreshDrawable extends RefreshDrawable {
     public void offsetTopAndBottom(int offset) {
         float prePercent = mHeight * 1f / refreshOffset;
         mHeight += offset;
-        mPercent = mHeight * 1f / refreshOffset;
+        mPercent = Math.max(0, mHeight * 1f / refreshOffset);
 
         if (mPercent <= 1) {
             // draw 文字的 y
